@@ -1,8 +1,9 @@
+from dataclasses import dataclass
 from io import BytesIO
+from typing import List, Protocol, Tuple, Union
+
 from PIL import Image
 from PIL.Image import Image as IMG
-from dataclasses import dataclass
-from typing import List, Tuple, Union, Protocol
 
 
 class UserInfo:

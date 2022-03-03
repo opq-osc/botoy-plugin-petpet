@@ -1,21 +1,22 @@
 import random
 from typing import List
+
+from PIL import Image, ImageDraw, ImageFilter
 from PIL.Image import Image as IMG
-from PIL import Image, ImageFilter, ImageDraw
 
 from .models import UserInfo
 from .utils import (
     DEFAULT_FONT,
     circle,
-    rotate,
-    resize,
-    perspective,
-    to_jpg,
-    save_jpg,
-    save_gif,
-    load_image,
-    load_font,
     fit_font_size,
+    load_font,
+    load_image,
+    perspective,
+    resize,
+    rotate,
+    save_gif,
+    save_jpg,
+    to_jpg
 )
 
 
@@ -325,9 +326,7 @@ async def turn(users: List[UserInfo], **kwargs) -> str:
     return save_gif(frames, 0.05)
 
 
-async def littleangel(
-    users: List[UserInfo], args: List[str] = [], **kwargs
-) -> str:
+async def littleangel(users: List[UserInfo], args: List[str] = [], **kwargs) -> str:
     img = users[0].img
     img = to_jpg(img).convert("RGBA")
     img_w, img_h = img.size
@@ -497,9 +496,7 @@ async def police(users: List[UserInfo], **kwargs) -> str:
     return save_jpg(bg)
 
 
-async def ask(
-    users: List[UserInfo], args: List[str] = [], **kwargs
-) -> str:
+async def ask(users: List[UserInfo], args: List[str] = [], **kwargs) -> str:
     img = users[0].img
     img = to_jpg(img).convert("RGBA")
     img = resize(img, (640, int(img.height * 640 / img.width)))

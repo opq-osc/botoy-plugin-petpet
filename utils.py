@@ -1,12 +1,13 @@
 import base64
 import math
-import numpy
-import imageio
 from io import BytesIO
 from typing import List, Tuple
+
+import imageio
+import numpy
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 from PIL.Image import Image as IMG
 from PIL.ImageFont import FreeTypeFont
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 from .download import get_font, get_image
 from .models import Command

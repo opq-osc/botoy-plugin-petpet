@@ -1,9 +1,9 @@
-import httpx
 import hashlib
 from pathlib import Path
+
+import httpx
 from aiocache import cached
 from nonebot.log import logger
-
 
 data_path = Path(__file__).parent / "resources"
 

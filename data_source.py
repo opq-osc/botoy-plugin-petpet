@@ -1,10 +1,10 @@
 from io import BytesIO
 from typing import List, Union
 
-from .download import download_url, download_avatar
-from .utils import to_image
-from .models import UserInfo, Command
+from .download import download_avatar, download_url
 from .functions import *
+from .models import Command, UserInfo
+from .utils import to_image
 
 commands = [
     Command(("摸", "摸摸", "rua"), petpet),
