@@ -95,6 +95,9 @@ async def handle(ctx: GroupMsg, prefix: str = "") -> Tuple[List[UserInfo], List[
 @plugin_receiver.group
 @ignore_botself
 async def gen_image(ctx: GroupMsg):
+    # 不想处理回复了
+    if gp.reply(ctx):
+        return
     if ctx.MsgType == MsgTypes.AtMsg:
         msg = gp.at(ctx).Content  # type: ignore
     elif ctx.MsgType == MsgTypes.PicMsg:
