@@ -3,7 +3,7 @@ from pathlib import Path
 
 import httpx
 from aiocache import cached
-from nonebot.log import logger
+from botoy import logger
 
 data_path = Path(__file__).parent / "resources"
 

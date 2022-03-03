@@ -1,90 +1,136 @@
+"""发送 头像表情包 获取帮助 指令为 pp 或 /"""
 import re
+import traceback
 from typing import List, Tuple
 
-from hoshino import HoshinoBot, Service
-from hoshino.typing import CQEvent, MessageSegment
+from botoy import GroupMsg, S, logger
+from botoy.async_decorators import equal_content, ignore_botself
+from botoy.collection import MsgTypes
+from botoy.contrib import plugin_receiver
+from botoy.parser import group as gp
 
-from . import functions as fn
 from .data_source import commands, make_image
 from .download import DownloadError, ResourceError
 from .models import UserInfo
 from .utils import help_image
 
-sv = Service("头像表情包")
 
-
-@sv.on_fullmatch("头像表情包")
-async def help(bot: HoshinoBot, ev: CQEvent):
+@plugin_receiver.group
+@ignore_botself
+@equal_content("头像表情包")
+async def help(ctx):
     im = await help_image(commands)
-    await bot.send(ev, MessageSegment.image(im))
+    if im.startswith("base64://"):
+        im = im[9:]
+    await S.bind(ctx).aimage(im, type=S.TYPE_BASE64)
 
 
 def is_qq(msg: str):
     return msg.isdigit() and 11 >= len(msg) >= 5
 
 
-async def get_user_info(bot: HoshinoBot, user: UserInfo):
+# TODO: user.name, user.gender
+async def get_user_info(ctx: GroupMsg, user: UserInfo):
     if not user.qq:
         return
 
-    if user.group:
-        info = await bot.get_group_member_info(
-            group_id=int(user.group), user_id=int(user.qq)
-        )
-        user.name = info.get("card", "") or info.get("nickname", "")
-        user.gender = info.get("sex", "")
-    else:
-        info = await bot.get_stranger_info(user_id=int(user.qq))
-        user.name = info.get("nickname", "")
-        user.gender = info.get("sex", "")
+    return
+    #
+    # if user.group:
+    #     info = await bot.get_group_member_info(
+    #         group_id=int(user.group), user_id=int(user.qq)
+    #     )
+    #     user.name = info.get("card", "") or info.get("nickname", "")
+    #     user.gender = info.get("sex", "")
+    # else:
+    #     info = await bot.get_stranger_info(user_id=int(user.qq))
+    #     user.name = info.get("nickname", "")
+    #     user.gender = info.get("sex", "")
 
 
-async def handle(ev: CQEvent, prefix: str = "") -> Tuple[List[UserInfo], List[str]]:
+async def handle(ctx: GroupMsg, prefix: str = "") -> Tuple[List[UserInfo], List[str]]:
     users: List[UserInfo] = []
     args: List[str] = []
-    msg = ev.message
-    for msg_seg in msg:
-        if msg_seg.type == "at":
-            users.append(UserInfo(qq=msg_seg.data["qq"], group=str(ev.group_id)))
-        elif msg_seg.type == "image":
-            users.append(UserInfo(img_url=msg_seg.data["url"]))
-        elif msg_seg.type == "text":
-            for text in str(msg_seg.data["text"]).split():
-                if prefix != "":
-                    text = re.sub(prefix, "", text)
-                if is_qq(text):
-                    users.append(UserInfo(qq=text))
-                elif text == "自己":
-                    users.append(UserInfo(qq=str(ev.user_id), group=str(ev.group_id)))
-                else:
-                    text = text.strip()
-                    if text:
-                        args.append(text)
+    text = ""
+
+    # opq没有消息段的概念，吐血
+
+    if ctx.MsgType == MsgTypes.AtMsg:
+        at_data = gp.at(ctx)
+        assert at_data
+        qq = at_data.UserID[0]
+        group = ctx.FromGroupId
+        users.append(UserInfo(qq=str(qq), group=str(group)))
+        text = ctx.Content
+    elif ctx.MsgType == MsgTypes.PicMsg:
+        pic_data = gp.pic(ctx)
+        assert pic_data
+        if pic_data.UserID:
+            users.append(
+                UserInfo(qq=str(pic_data.UserID[0]), group=str(ctx.FromGroupId))
+            )
+        users.append(UserInfo(img_url=pic_data.GroupPic[0].Url))
+        text = pic_data.Content
+    elif ctx.MsgType == MsgTypes.TextMsg:
+        text = ctx.Content
+
+    # 去除指令
+    text = text.strip("/").strip("pp")
+
+    for text in text.split():
+        if prefix != "":
+            text = re.sub(prefix, "", text)
+        if is_qq(text):
+            users.append(UserInfo(qq=text))
+        elif text == "自己":
+            users.append(UserInfo(qq=str(ctx.FromUserId), group=str(ctx.FromGroupId)))
+        else:
+            text = text.strip()
+            if text:
+                args.append(text)
+
     return users, args
 
 
-@sv.on_prefix(("/", "pp/"))
-async def gen_image(bot: HoshinoBot, ev: CQEvent):
-    msg = ev.message.extract_plain_text().strip()
-    assert isinstance(msg, str)
-    for com in commands:
-        for kw in com.keywords:
+@plugin_receiver.group
+@ignore_botself
+async def gen_image(ctx: GroupMsg):
+    if ctx.MsgType == MsgTypes.AtMsg:
+        msg = gp.at(ctx).Content  # type: ignore
+    elif ctx.MsgType == MsgTypes.PicMsg:
+        msg = gp.pic(ctx).Content  # type: ignore
+    elif ctx.MsgType == MsgTypes.TextMsg:
+        msg = ctx.Content
+    else:
+        return
+
+    if not msg.startswith("pp") and not msg.startswith("/"):
+        return
+    msg = msg.strip("/").strip("pp")
+
+    for cmd in commands:
+        for kw in cmd.keywords:
             if kw in msg:
                 args = msg[len(kw) :]
-                users, args = await handle(ev, kw)
-                sender = UserInfo(qq=str(ev.user_id))
-                await get_user_info(bot, sender)
+                users, args = await handle(ctx, kw)
+                sender = UserInfo(qq=str(ctx.FromUserId))
+                await get_user_info(ctx, sender)
                 for user in users:
-                    await get_user_info(bot, user)
+                    await get_user_info(ctx, user)
+                # 能跑就行：）
+                if not users:
+                    users.append(sender)
+
                 try:
-                    im = await make_image(com, sender, users, args=args)
+                    im = await make_image(cmd, sender, users, args=args)
                 except DownloadError:
-                    await bot.finish(ev, "图片下载出错，请稍后再试")
+                    await S.atext("图片下载出错，请稍后再试")
                 except ResourceError:
-                    await bot.finish(ev, "资源下载出错，请稍后再试")
+                    await S.atext("资源下载出错，请稍后再试")
                 except:
-                    # logger.warning(traceback.format_exc())
-                    await bot.finish(ev, "出错了，请稍后再试")
-                if "base64" in im:
-                    im = MessageSegment.image(im)
-                await bot.send(ev, im)
+                    logger.warning(traceback.format_exc())
+                    await S.atext("出错了，请稍后再试")
+                else:
+                    if isinstance(im, str) and im.startswith("base64://"):
+                        im = im[9:]
+                    await S.aimage(im)
