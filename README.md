@@ -1,6 +1,6 @@
 # botoy-plugin-petpet
 
-** 注意，请点击 [fork](https://github.com/opq-osc/botoy-plugin-petpet/network/members) 查看原创地址**
+**注意，请点击 [fork](https://github.com/opq-osc/botoy-plugin-petpet/network/members) 查看原创地址**
 
 因为 opq 的消息格式很不规范，所以很多地方的修改都是本着能跑就行的心态，望知悉 😂
 
