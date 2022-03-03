@@ -1,3 +1,4 @@
+import base64
 import math
 import numpy
 import imageio
@@ -64,10 +65,11 @@ def perspective(img: IMG, points: List[Tuple[float, float]]):
     return img.transform((new_w, new_h), Image.PERSPECTIVE, coeffs, Image.BICUBIC)
 
 
-def save_gif(frames: List[IMG], duration: float) -> BytesIO:
+def save_gif(frames: List[IMG], duration: float) -> str:
     output = BytesIO()
     imageio.mimsave(output, frames, format="gif", duration=duration)
-    return output
+    base64_str = base64.b64encode(output.getvalue()).decode()
+    return f"base64://{base64_str}"
 
 
 def to_jpg(frame: IMG, bg_color=(255, 255, 255)) -> IMG:
@@ -79,11 +81,12 @@ def to_jpg(frame: IMG, bg_color=(255, 255, 255)) -> IMG:
         return frame.convert("RGB")
 
 
-def save_jpg(frame: IMG) -> BytesIO:
+def save_jpg(frame: IMG) -> str:
     output = BytesIO()
     frame = frame.convert("RGB")
     frame.save(output, format="jpeg")
-    return output
+    base64_str = base64.b64encode(output.getvalue()).decode()
+    return f"base64://{base64_str}"
 
 
 def to_image(data: bytes, convert: bool = True) -> IMG:
@@ -126,7 +129,7 @@ async def fit_font_size(
             return 0
 
 
-async def help_image(commands: List[Command]) -> BytesIO:
+async def help_image(commands: List[Command]) -> str:
     font = await load_font(DEFAULT_FONT, 30)
     padding = 10
 
