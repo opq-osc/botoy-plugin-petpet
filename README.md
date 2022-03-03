@@ -1,4 +1,4 @@
-# nonebot-plugin-petpet-hoshino_ver
+# Hoshinobot-plugin-petpet
 移植自[nonebot-plugin-petpet](https://github.com/MeetWq/nonebot-plugin-petpet)
 
 [Nonebot2](https://github.com/nonebot/nonebot2) 插件的Hoshino版，制作头像相关的表情包
@@ -22,6 +22,7 @@
 - 指令 + 图片，如：/爬 [图片]
 
 前三种触发方式会使用目标qq的头像作为图片
+
 如果`/`触发与其他插件冲突，可以使用`pp/`作为前缀
 #### 支持的指令
 
