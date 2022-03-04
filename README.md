@@ -4,7 +4,7 @@
 
 因为 opq 的消息格式很不规范，所以很多地方的修改都是本着能跑就行的心态，望知悉 😂
 
-使用 `botoy plugin install git@github.com:opq-osc/botoy-plugin-petpet.git petpet` 安装，
+使用 `botoy plugin install https://github.com/opq-osc/botoy-plugin-petpet.git petpet` 安装，
 安装后记得安装依赖 `pip install -r requirements.txt`
 
 ### 使用
