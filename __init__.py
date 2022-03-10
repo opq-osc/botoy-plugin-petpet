@@ -137,3 +137,5 @@ async def gen_image(ctx: GroupMsg):
                     if isinstance(im, str) and im.startswith("base64://"):
                         im = im[9:]
                     await S.aimage(im)
+
+                return
